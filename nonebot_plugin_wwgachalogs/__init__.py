@@ -1,8 +1,8 @@
 from nonebot.plugin import PluginMetadata
 from nonebot import require, on_command
-from nonebot.adapters.onebot.v11 import Message, MessageSegment
+from nonebot.adapters.onebot.v11 import Message
 from nonebot.adapters.onebot.v11.event import GroupMessageEvent
-from nonebot.params import CommandArg
+from nonebot.params import CommandArg, EventPlainText
 from nonebot.typing import T_State
 from nonebot.log import logger
 
@@ -68,20 +68,20 @@ async def handle_wwgacha_bind_info(event: GroupMessageEvent, state: T_State, ses
     if user == None:
         state["if_new_user"] = True
 
-    if user == None or new_user == user:
-        state["if_cover"] = True
+    if user == None or new_user.eq(user):
+        state["if_cover"] = "是"
 
     state["wwgacha_user"] = new_user
 
 
 @wwgacha_bind_info.got("if_cover", prompt="已设置过抽卡信息，输入\"是\"覆盖已有信息，输入其他内容取消")
-async def _(state: T_State, session: async_scoped_session, args: Message = CommandArg()):
+async def _(state: T_State, session: async_scoped_session):
     user = state.get("wwgacha_user")
     if not isinstance(user, UserInfo):
         await wwgacha_bind_info.finish(f"user类型错误:{type(user)}")
 
     gachadatabase = GachaDatabase(session=session)
-    if state.get("if_cover", False) or args.extract_plain_text() == "是":
+    if str(state.get("if_cover", "否")).strip() == "是":
         if state.get("if_new_user", False):
             await gachadatabase.insert_user_info(external_user=user)
         else:
@@ -89,7 +89,7 @@ async def _(state: T_State, session: async_scoped_session, args: Message = Comma
         await gachadatabase.commit()
         await wwgacha_bind_info.finish(f"抽卡信息绑定成功，使用命令\"抽卡记录\"查看抽卡记录")
     else:
-        await wwgacha_bind_info.finish()
+        await wwgacha_bind_info.finish(f"取消覆盖")
 
 
 

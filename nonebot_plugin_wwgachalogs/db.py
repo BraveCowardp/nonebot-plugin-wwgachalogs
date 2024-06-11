@@ -1,6 +1,3 @@
-import aiosqlite
-import asyncio
-from os.path import abspath, dirname
 from nonebot.log import logger
 from .model import UserInfo
 from nonebot_plugin_orm import async_scoped_session

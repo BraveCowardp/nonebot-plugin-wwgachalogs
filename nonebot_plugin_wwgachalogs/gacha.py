@@ -23,7 +23,7 @@ class GachaLogs:
     async def check_user_info(self) -> bool:
         async with httpx.AsyncClient() as client:
             request_data = self.generate_request_data(cardPoolId=1, cardPoolType=1)
-            respose = await client.post(url=GACHALOGS_URL, json=request_data)
+            respose = await client.post(url=GACHALOGS_URL, json=request_data, timeout=90)
         
         status = respose.json()['message']
         if status != 'success':
@@ -36,7 +36,7 @@ class GachaLogs:
         for pool_type in CardPoolTypes:
             async with httpx.AsyncClient() as client:
                 request_data = self.generate_request_data(cardPoolId=pool_type.value, cardPoolType=pool_type.value)
-                respose = await client.post(url=GACHALOGS_URL, json=request_data)
+                respose = await client.post(url=GACHALOGS_URL, json=request_data, timeout=90)
             
             status = respose.json()['message']
             if status != 'success':

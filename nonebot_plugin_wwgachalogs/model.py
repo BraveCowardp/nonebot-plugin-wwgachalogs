@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import List
-from nonebot import require
 from sqlalchemy.orm import Mapped, mapped_column
 from nonebot_plugin_orm import Model
 
@@ -9,7 +8,12 @@ class UserInfo(Model):
     userid: Mapped[int] = mapped_column(primary_key=True)
     playerid: Mapped[str]
     recordid: Mapped[str]
-        
+
+    def eq(self, other) -> bool:
+        if not isinstance(other, UserInfo):
+            return False
+        return (self.userid == other.userid and self.playerid == other.playerid and self.recordid == other.recordid)
+
 class CardPoolTypes(Enum):
     角色UP池 = 1
     武器UP池 = 2

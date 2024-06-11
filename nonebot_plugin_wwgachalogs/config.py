@@ -1,7 +1,4 @@
-from pydantic import BaseModel, Extra
-from typing import Optional
-
-from nonebot import get_driver
+from pydantic import BaseModel
 
 
 class Config(BaseModel):
