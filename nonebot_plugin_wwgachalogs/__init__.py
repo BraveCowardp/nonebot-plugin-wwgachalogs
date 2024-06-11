@@ -2,7 +2,7 @@ from nonebot.plugin import PluginMetadata
 from nonebot import require, on_command
 from nonebot.adapters.onebot.v11 import Message
 from nonebot.adapters.onebot.v11.event import GroupMessageEvent
-from nonebot.params import CommandArg, EventPlainText
+from nonebot.params import CommandArg
 from nonebot.typing import T_State
 from nonebot.log import logger
 
