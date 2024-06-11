@@ -1,19 +1,14 @@
 from enum import Enum
 from typing import List
+from nonebot import require
+from sqlalchemy.orm import Mapped, mapped_column
+from nonebot_plugin_orm import Model
 
-class User:
-    def __init__(self, uid: int, playerid: str, recordid: str) -> None:
-        self.uid: int = uid
-        self.playerid: str = playerid
-        self.recordid: str = recordid
 
-    def __eq__(self, value: object) -> bool:
-        if not isinstance(value, User):
-            return False
-        if self.uid == value.uid and self.playerid == value.playerid and self.recordid == value.recordid:
-            return True
-        else:
-            return False
+class UserInfo(Model):
+    userid: Mapped[int] = mapped_column(primary_key=True)
+    playerid: Mapped[str]
+    recordid: Mapped[str]
         
 class CardPoolTypes(Enum):
     角色UP池 = 1

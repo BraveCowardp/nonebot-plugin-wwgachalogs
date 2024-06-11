@@ -6,9 +6,12 @@ from nonebot.params import CommandArg
 from nonebot.typing import T_State
 from nonebot.log import logger
 
+require("nonebot_plugin_orm")
+
+from nonebot_plugin_orm import async_scoped_session
 from .config import Config
 from .db import GachaDatabase
-from .model import User, CardPoolTypes, GachaLogList
+from .model import CardPoolTypes, UserInfo
 from .gacha import GachaLogs
 
 
@@ -36,7 +39,7 @@ wwgacha_get_gachalogs = on_command("抽卡记录", aliases={"抽卡记录查询"
 wwgacha_help = on_command("抽卡记录帮助")
 
 @wwgacha_bind_info.handle()
-async def handle_wwgacha_bind_info(event: GroupMessageEvent, state: T_State, args: Message = CommandArg()):
+async def handle_wwgacha_bind_info(event: GroupMessageEvent, state: T_State, session: async_scoped_session, args: Message = CommandArg()):
     info_list = args.extract_plain_text().split()
     if len(info_list) != 2:
         await wwgacha_bind_info.finish("参数个数有误，应为playerid和recordid")
@@ -52,14 +55,15 @@ async def handle_wwgacha_bind_info(event: GroupMessageEvent, state: T_State, arg
     if playerid == "" or recordid == "":
         await wwgacha_bind_info.finish("playerid应为9位，recordid应为32位，请检查")
 
-    uncheck_user = User(uid=event.user_id, playerid=playerid, recordid=recordid)
+    uncheck_user = UserInfo(userid=event.user_id, playerid=playerid, recordid=recordid)
     # 检查用户信息是否有效
     gachalogs = GachaLogs(user=uncheck_user)
     if not await gachalogs.check_user_info():
         await wwgacha_bind_info.finish("用户信息检查不通过，无法查询到抽卡信息")
     new_user = uncheck_user
 
-    user = await gachadatabase.get_user_info(uid=new_user.uid)
+    gachadatabase = GachaDatabase(session=session)
+    user = await gachadatabase.get_user_info(userid=new_user.userid)
 
     if user == None:
         state["if_new_user"] = True
@@ -71,25 +75,30 @@ async def handle_wwgacha_bind_info(event: GroupMessageEvent, state: T_State, arg
 
 
 @wwgacha_bind_info.got("if_cover", prompt="已设置过抽卡信息，输入\"是\"覆盖已有信息，输入其他内容取消")
-async def _(state: T_State, args: Message = CommandArg()):
+async def _(state: T_State, session: async_scoped_session, args: Message = CommandArg()):
     user = state.get("wwgacha_user")
-    if not isinstance(user, User):
+    if not isinstance(user, UserInfo):
         await wwgacha_bind_info.finish(f"user类型错误:{type(user)}")
-    
+
+    gachadatabase = GachaDatabase(session=session)
     if state.get("if_cover", False) or args.extract_plain_text() == "是":
         if state.get("if_new_user", False):
-            await gachadatabase.insert_user_info(user=user)
+            await gachadatabase.insert_user_info(external_user=user)
         else:
-            await gachadatabase.update_user_info(user=user)
+            await gachadatabase.update_user_info(external_user=user)
+        await gachadatabase.commit()
+        await wwgacha_bind_info.finish(f"抽卡信息绑定成功，使用命令\"抽卡记录\"查看抽卡记录")
     else:
         await wwgacha_bind_info.finish()
 
 
+
 @wwgacha_get_gachalogs.handle()
-async def handle_wwgacha_get_gachalogs(event: GroupMessageEvent):
+async def handle_wwgacha_get_gachalogs(event: GroupMessageEvent, session: async_scoped_session):
     userid = event.user_id
 
-    user = await gachadatabase.get_user_info(uid=userid)
+    gachadatabase = GachaDatabase(session=session)
+    user = await gachadatabase.get_user_info(userid=userid)
     if user == None:
         await wwgacha_get_gachalogs.finish("尚未绑定抽卡信息，请使用\"鸣潮抽卡信息绑定\"命令绑定")
 
@@ -125,6 +134,3 @@ async def handle_wwgacha_help():
         6.发送 "鸣潮抽卡信息绑定 player_id record_id" 即可绑定抽卡信息，可长期使用
         例如：鸣潮抽卡信息绑定 100123456 b3545192e2d8ac6a6b0d069e6f54e83f
 """)
-
-
-gachadatabase = GachaDatabase()

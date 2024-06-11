@@ -1,12 +1,12 @@
 import httpx
 
 from nonebot.log import logger
-from .model import User, GachaLogList, CardPoolTypes
+from .model import GachaLogList, CardPoolTypes, UserInfo
 
 GACHALOGS_URL = 'https://gmserver-api.aki-game2.com/gacha/record/query'
 
 class GachaLogs:
-    def __init__(self, user: User) -> None:
+    def __init__(self, user: UserInfo) -> None:
         self.user = user
         self.gacha_log_dict = {}
 
