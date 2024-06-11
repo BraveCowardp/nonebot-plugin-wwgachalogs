@@ -595,7 +595,7 @@ nonebot-plugin-localstore = ">=0.6,<1.0"
 nonebot2 = ">=2.2,<3.0"
 sqlalchemy = [
     {version = ">=2.0,<3.0"},
-    {version = "*", extras = ["aiosqlite"], optional = true, markers = "extra == \"sqlite\" or extra == \"aiosqlite\""},
+    {version = "*", extras = ["aiosqlite"], optional = true, markers = "extra == \"aiosqlite\""},
 ]
 typing-extensions = {version = ">=4.9,<5.0", markers = "python_version < \"3.11\""}
 
@@ -1014,4 +1014,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "4f7394ef5abf9a05367004d27b3cd1016ff3fb2d584a7d75f6aeccdba5dd377d"
+content-hash = "3b48ea9ad4856888e5474d1c71e4d7869ed881b39e8bdb0e24fc334d2ae7404d"
