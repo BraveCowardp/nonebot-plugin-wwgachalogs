@@ -18,7 +18,7 @@ from .gacha import GachaLogs
 __plugin_meta__ = PluginMetadata(
     name="鸣潮抽卡记录分析",
     description="鸣潮抽卡记录分析",
-    usage="{插件用法}",
+    usage="使用指令\"抽卡记录帮助\"查看使用帮助",
 
     type="application",
     # 发布必填，当前有效类型有：`library`（为其他插件编写提供功能），`application`（向机器人用户提供功能）。
