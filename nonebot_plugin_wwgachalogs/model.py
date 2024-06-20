@@ -9,6 +9,11 @@ class UserInfo(Model):
     playerid: Mapped[str]
     recordid: Mapped[str]
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, UserInfo):
+            return False
+        return (self.userid == other.userid and self.playerid == other.playerid and self.recordid == other.recordid)
+    
     def eq(self, other) -> bool:
         if not isinstance(other, UserInfo):
             return False
