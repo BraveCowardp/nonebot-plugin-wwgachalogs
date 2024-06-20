@@ -5,44 +5,62 @@ from .model import GachaLogList, CardPoolTypes, UserInfo
 
 GACHALOGS_URL = 'https://gmserver-api.aki-game2.com/gacha/record/query'
 
-class GachaLogs:
-    def __init__(self, user: UserInfo) -> None:
-        self.user = user
-        self.gacha_log_dict = {}
+def __prefill_request_data__(user: UserInfo):
+    cache = {
+        "serverId": "76402e5b20be2c39f095a152090afddc",
+        playerId": user.playerid,
+        "languageCode": "zh-Hans",
+        "recordId": user.recordid,
+        "cardPoolId": -1,
+        "cardPoolType": -1
+    }
+    def request_data(cardPoolId: int, cardPoolType: int):
+        cache["cardPoolId"] = cardPoolId
+        cache["cardPoolType"] = cardPoolType
+        return cache
+    return request_data
 
-    def generate_request_data(self, cardPoolId: int, cardPoolType: int) -> dict:
-        return {
-                    "serverId": "76402e5b20be2c39f095a152090afddc",
-                    "playerId": self.user.playerid,
-                    "languageCode": "zh-Hans",
-                    "recordId": self.user.recordid,
-                    "cardPoolId": cardPoolId,
-                    "cardPoolType": cardPoolType
-                }
+def __gen_request_data__(user: UserInfo):
+    unfinished = __prefill_request_data__(user)
+    for pool_type in CardPoolTypes:
+        finished = unfinished(pool_type.value, pool_type.value)
+        yield finished
 
-    async def check_user_info(self) -> bool:
-        async with httpx.AsyncClient() as client:
-            request_data = self.generate_request_data(cardPoolId=1, cardPoolType=1)
-            respose = await client.post(url=GACHALOGS_URL, json=request_data, timeout=90)
+async def check(user):
+    request_datas = __gen_request_data__(user)
+    request_data = next(request_datas)
+    return check_user_info(request_data)
         
-        status = respose.json()['message']
-        if status != 'success':
-            return False
-        return True
+async def do(user) -> dict[str, GachaLogList]|None:
+    gacha_log_dict: dict[str, GachaLogList] = {}
+    request_datas = __gen_request_data__(user)
+        
+    for request_data in request_datas:
+        gacha_list = get_gacha_info(request_data)
+        gacha_log_dict[pool_type.name] = gacha_list
+     return gacha_log_dict
+
+
+
+def __check_user_info__(request_data) -> bool:
+    with httpx.AsyncClient() as client:
+        request_data = self.generate_request_data(cardPoolId=1, cardPoolType=1)
+        respose = client.post(url=GACHALOGS_URL, json=request_data, timeout=90)
+        
+    status = respose.json()['message']
+    if status != 'success':
+        return False
+    return True
     
-    async def get_gacha_info(self) -> dict[str, GachaLogList]|None:
-        gacha_log_dict: dict[str, GachaLogList] = {}
-
-        for pool_type in CardPoolTypes:
-            async with httpx.AsyncClient() as client:
-                request_data = self.generate_request_data(cardPoolId=pool_type.value, cardPoolType=pool_type.value)
-                respose = await client.post(url=GACHALOGS_URL, json=request_data, timeout=90)
+def __get_gacha_info__(request_data):
+    with httpx.AsyncClient() as client:
+        respose = client.post(url=GACHALOGS_URL, json=request_data, timeout=90)
             
-            status = respose.json()['message']
-            if status != 'success':
-                return None
+    status = respose.json()['message']
+    if status != 'success':
+        return None
             
-            data = respose.json()['data']
-            gacha_log_dict[pool_type.name] = GachaLogList(data=data)
+    data = respose.json()['data']
+    return GachaLogList(data=data)
+    
 
-        return gacha_log_dict
