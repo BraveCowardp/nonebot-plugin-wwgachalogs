@@ -2,7 +2,7 @@ from nonebot.log import logger
 from .model import UserInfo
 from nonebot_plugin_orm import async_scoped_session
 
-class GachaDatabase:
+class UserInfoManager:
     def __init__(self, session: async_scoped_session) -> None:
         self.session = session
         
@@ -12,7 +12,7 @@ class GachaDatabase:
             return None
         return user
     
-    async def update_user_info(self, external_user: UserInfo) -> bool:
+    async def merge_user_info(self, external_user: UserInfo) -> bool:
         try:
             await self.session.merge(external_user)
         except Exception as e:
@@ -22,7 +22,7 @@ class GachaDatabase:
             ##logger.info(f'更新信息表成功')
             return True
 
-    async def insert_user_info(self, external_user: UserInfo) -> bool:
+    async def add_user_info(self, external_user: UserInfo) -> bool:
         try:
             self.session.add(external_user)
         except Exception as e:
